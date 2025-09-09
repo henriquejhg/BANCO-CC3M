@@ -1,0 +1,16 @@
+create view atrasos
+as
+
+select pag_descricao, pag_valor, pag_datavencimento,
+datediff(dd,pag_datavencimento,getdate()) as dias_atraso
+from Pagar
+where Pag_DataVencimento<getdate()
+and Pag_DataPagto is null
+
+
+select * from atrasos
+where dias_atraso > 30
+
+-- begin tran --
+-- é um gatilho para executar um comando como delete registro--
+-- ele é confirmado com commit ou cancelado com rollback --
