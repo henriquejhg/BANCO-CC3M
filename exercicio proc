@@ -1,0 +1,41 @@
+-- exercicio 4, periodo desejado,recebidas(0),a receber(1), todas(2)--
+create proc extrato
+(@tipo int,
+@datainicio date,
+@datafim date)
+as
+	if @tipo = 2
+	begin
+		select 
+			Emp_RazaoSocial,
+			sum(rec_valor) as faturado,
+			sum(case when rec_pagto is null then rec_valor else 0 end) as 'a receber',
+			sum(case when rec_pagto is not null then rec_valor else 0 end) as 'recebido'
+		from
+			empresa,
+			receber
+		where fkempresa=Idempresa
+		and rec_vencimento>@datainicio
+		and rec_vencimento<@datafim
+		group by Emp_RazaoSocial
+		end
+
+	if @tipo = 1
+	begin
+		select 
+			Emp_RazaoSocial,
+			sum(rec_valor) as faturado,
+			sum(case when rec_pagto is null then rec_valor else 0 end) as 'a receber',
+			sum(case when rec_pagto is not null then rec_valor else 0 end) as 'recebido'
+		from
+			empresa,
+			receber
+		where fkempresa=Idempresa
+		and rec_vencimento>@datainicio
+		and rec_vencimento<@datafim
+		group by Emp_RazaoSocial
+		end
+		return
+
+
+exec extrato @tipo=2, @datainicio = '01/01/2025', @datafim = '12/12/2025'
