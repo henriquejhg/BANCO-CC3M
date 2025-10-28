@@ -1,0 +1,47 @@
+--segurança
+create master key encryption by password = '12345'
+go
+
+drop master key
+
+--criar certificado
+create certificate certificado_uvv with subject = 'certificado'
+
+select * from sys_certificates;
+
+--criar chave de cript. do banco e associar ao certificado
+create database encryption key
+with algorithm = aes_256
+encryption by server certificate certificado_uvv;
+go
+
+--ativar a cript para banco de dados
+alter database uvv
+set encryption on;
+go
+
+
+--objetivo da cript. é proteger os dados(mdf/mdb), pois n tem a chave master e o certificado.
+--importante fazer backup da chave master
+backup master key to file = 'C:caminho\banco.key'
+
+--proteção de confidencialidade
+--a nivel de coluna
+create symmetric key SK_DadosSensiveis
+with algorithm = aes_256
+encryption by certificado_uvv
+--a chave protegida pelo certificado
+
+
+--abrir a chave usando certificado
+open symmetric key sk_dadossensiveis
+	decryption by certificate certificado_uvv;
+
+update empresa set
+cpf_crypto = encryptbykey(key(key_guid('sk_dadossensiveis'),'594048') where idempresa = 2
+
+select convert (varchar(50),
+decryptbykey(cpf_crypt)) as cpf_em_texto
+from dbo.empresa where idempresa = 2;
+
+--tanto decrypt quanto crypt esperam String como valor
