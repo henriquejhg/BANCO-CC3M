@@ -1,0 +1,34 @@
+--tratamento de error
+create proc transacao
+(
+@idbancoorigem =int,
+@idbancodestino=int,
+@valor=numeric(10,2);
+)
+as
+begin try
+	
+	--se valor = 0,passara mensagem de error no +ERROR_MENSSAGE no CATCH,pode ter varios Throw e um catch pode receber --
+	if @valor=0
+		Throw 50001,'Valor insuficiente',1
+	
+	update banco
+	set Ban_Saldo = Ban_Saldo - @valor
+	where idbanco = @idbancoorigem
+
+	update banco
+	set Ban_Saldo = ban_saldo + @valor
+	where idbanco = @idbancodestino;
+end try
+	Begin catch
+		select 'Erro, foi:' +ERROR_MESSAGE()
+	end catch
+return
+
+
+exec transacao
+@idbancoorigem=2
+@idbancodestino=1
+@valor=300
+
+select * from banco
