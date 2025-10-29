@@ -1,0 +1,80 @@
+--1) criar sp q efetua baixa (preencher campo data pagamento e banco) de uma fatura
+--parametros: id da fatura pagar,data de pagamento, valor pago, fk do banco onde foi feito o pagamento
+--procedimentos: baixar fatura paga, atualizar campo data pagamento e fkbanco
+--procedimentos: atualizar o saldo bancario na tabela banco
+--procedimentos: criar registro na tabela movbanco com os dados do pagamento e atualizar o saldo nessa tabela(movban_saldo)
+--usar estrutura:BEGIN TRY ...
+--               
+--            ...END TRY
+--               begin catch...
+--            ...endcatch
+--            BEGIN TRAN...
+--             ...COMMIT / ROLLBACK
+CREATE PROC BAIXA_FATURA
+(
+@idfatura int,
+@data_pagamento date,
+@valor numeric(18,2),
+@idbanco int;
+)
+AS
+BEGIN TRY
+--existe fatura?
+	IF EXISTS (SELECT * FROM PAGAR WHERE IdPagar=+cast(@ifatura)
+		BEGIN
+		--tem saldo?
+		declare @vsaldo numeric (18,2)
+		set @vsaldo = (select ban_saldo from banco where idpagar=fkbanco)
+	
+		if @vsaldo<valor
+			THROW 50001,'saldo insuficiente',1
+		--COLOCAR BEGIN TRAN NO INICIO
+		BEGIN TRAN
+		--baixar fatura/duplicata(colocar data de pag da fatura)
+		update pagar set
+		Pag_DataPagto = @data,
+		FkBanco=@idbanco
+		where idpagar=@idfatura
+
+		--atualizar saldo
+		update banco set
+			ban_saldo = ban_saldo - @valor
+			where idbanco=@fkbanco
+
+		--atualizar movimentação
+		insert Movbanco
+		(movban_descricao,
+		movban_data,
+		movban_saldo,
+		movban_tipo,
+		movban_valor)
+		values
+		(@data,'pagamento duplicata nr.' +@idfatura,
+		@valor,0,@vsaldo - @valor
+		
+		--COLOCAR COMMIT
+		COMMIT
+		END
+		
+	ELSE
+		BEGIN
+			throw 50020,'fatura informada não existe',1
+
+		END
+END TRY
+	BEGIN CATCH
+	--COLOCAR ROLL BACK
+	ROLLBACK
+		select 'Erro, foi:' +ERROR_MESSAGE()
+	END CATCH
+return
+
+exec 
+( @idfatura = 10,
+@data = '10/29/2025',
+@valor = 100,
+@fkbanco = 1
+)
+
+select * from pagar
+--professor chama 'PAGAR' de 'FATURA'
