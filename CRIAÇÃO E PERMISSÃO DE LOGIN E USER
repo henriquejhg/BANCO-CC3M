@@ -1,0 +1,71 @@
+---MOSTRAR O DOMINIO
+SELECT HOST_NAME()
+
+--- MOSTRA TODOS OS LOGINS
+select
+	sid,
+	principal_id,
+	name as loginname,
+	type_desc as tipo,
+	create_date as criadoem,
+	is_disabled as desativado,
+	type
+from sys.server_principals
+order by name;
+
+--- CRIAR USUARIO
+create login lucas with password = '123'
+--- CRIAR USER(PERMISSÃO) PARA USUARIO
+create user user_todos from login lucas;
+--- O QUE CADA USER PODE FAZER
+---grant da permissão
+---deny nega permissão(bom para negar algumas,quando der todos.)
+---revoke reseta a permissão
+	GRANT SELECT ON DBO.EMPRESA TO USER_TODOS; ---CUIDADO, NAO CONFUNDIR O LOGIN COM USER
+	--(PODE DAR SELECT NA TABELA EMPRESA)
+
+	GRANT SELECT (NOME,CPF) ON DBO.EMPRESA TO USER_TODOS;
+	--(SELECT SOMENTE EM NOME E CPF DA TABELA EMPRESA)
+
+	GRANT SELECT ON DBO.CLIENTES TO USER_TODOS WITH GRANT OPTION
+	--(USER_TODOS PODE REPASSAR A PERMISSÃO DELE PARA OUTRO USER)
+
+	GRANT CONTROL ON DATABASE:: UVV TO USER_TODOS;
+	--(DA CONTROLE DO BANCO UVV PARA USER)
+
+	GRANT EXECUTE TO USER_TODOS; -- QUALQUER SP
+
+	GRANT EXECUTE ON OBJECT::'SP_UI_PAGAR' --SO ESSA SP
+
+---MOSTRA USER
+SELECT 
+	SID,
+	PRINCIPAL_ID,
+	NAME AS USERNAME,
+	TYPE_DESC AS TIPO,
+	TYPE,
+	AUTHENTICATION_TYPE_DESC AS AUTENTICACAO,
+	CREATE_DATE AS CRIADOEM
+FROM SYS.DATABASE_PRINCIPALS
+WHERE TYPE IN ('U','S','G')
+ORDER BY NAME;
+
+---cuidado com adm e usuario(login), mexendo em dar permissão pelo adm para o login e seu user.
+
+--VER O DONO DO BANCO 
+SELECT NAME, OWNER_SID AS OWNERlOGIN
+FROM SYS.DATABASES;
+
+SELECT NAME, SUSER_SNAME(OWNER_SID) AS OWNERlOGIN
+FROM SYS.DATABASES;
+
+---VER AS PERMISSOES DOS USER
+SELECT
+	user_name(grantee_principal_id) as usuario,
+	permission_name,
+	state_desc,
+	object_name(major_id) as objeto
+from sys.database_permissions;
+where...
+
+--MATERIA DA PROVA ACABA AQUI
